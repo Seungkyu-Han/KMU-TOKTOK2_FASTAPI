@@ -1,22 +1,52 @@
 import os
-
 from fastapi import FastAPI
 from openai import OpenAI
 from dotenv import load_dotenv
+from pydantic import BaseModel
+from typing import List, Optional
+import time
 
 app = FastAPI()
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
-
-@app.get("/")
-async def root():
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    thread_messages = client.beta.threads.messages.list("thread_6jbOIyZi6qe1PIPBnoOE01vo")
-    print(thread_messages)
-    return {"message": "Hello World"}
+OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
+ASSISTANT_API_KEY = os.environ["ASSISTANT_API_KEY"]
 
 
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
+class PostReq(BaseModel):
+    content: str
+
+
+@app.post("/")
+async def root(post_req: PostReq):
+    client = OpenAI(api_key=OPENAI_API_KEY)
+
+    # 스레드 생성
+
+    run = client.beta.threads.create_and_run(
+        assistant_id=ASSISTANT_API_KEY,
+        thread={
+            "messages": [
+                {"role": "user", "content": post_req.content}
+            ]
+        }
+    )
+
+    count = 0
+
+    while run.status == 'queued' or run.status == 'in_progress':
+        run = client.beta.threads.runs.retrieve(
+            thread_id=run.thread_id,
+            run_id=run.id,
+        )
+        count += 1
+
+        if count > 10:
+            return "챗봇 요청 중에 에러가 발생했습니다."
+
+        time.sleep(1)
+
+    message = client.beta.threads.messages.list(run.thread_id)
+
+    return message.data[0].content[0].text.value
