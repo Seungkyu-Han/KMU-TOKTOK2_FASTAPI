@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from openai import OpenAI
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from typing import List, Optional
 import time
 
 app = FastAPI()
