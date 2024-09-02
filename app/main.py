@@ -1,9 +1,11 @@
 import os
 from fastapi import FastAPI
+import asyncio
 from openai import OpenAI
 from dotenv import load_dotenv
 from pydantic import BaseModel
 import time
+
 
 app = FastAPI()
 
@@ -42,6 +44,7 @@ async def root(post_req: PostReq):
         count += 1
 
         if count > 10:
+            await delete_thread(client, run.thread_id)
             return "챗봇 요청 중에 에러가 발생했습니다."
 
         time.sleep(1)
@@ -49,3 +52,7 @@ async def root(post_req: PostReq):
     message = client.beta.threads.messages.list(run.thread_id)
 
     return message.data[0].content[0].text.value
+
+
+async def delete_thread(client, thread_id):
+    client.beta.threads.delete(thread_id)
