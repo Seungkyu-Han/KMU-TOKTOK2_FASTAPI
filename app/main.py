@@ -51,6 +51,8 @@ async def root(post_req: PostReq):
 
     message = client.beta.threads.messages.list(run.thread_id)
 
+    await delete_thread(client, run.thread_id)
+
     return message.data[0].content[0].text.value
 
 
