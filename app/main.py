@@ -1,6 +1,5 @@
 import os
 from fastapi import FastAPI
-import asyncio
 from openai import OpenAI
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -12,11 +11,11 @@ app = FastAPI()
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-ASSISTANT_API_KEY = os.environ["ASSISTANT_API_KEY"]
 
 
 class PostReq(BaseModel):
     content: str
+    assistantId: str
 
 
 @app.post("/")
@@ -26,7 +25,7 @@ async def root(post_req: PostReq):
     # 스레드 생성
 
     run = client.beta.threads.create_and_run(
-        assistant_id=ASSISTANT_API_KEY,
+        assistant_id=post_req.assistantId,
         thread={
             "messages": [
                 {"role": "user", "content": post_req.content}
