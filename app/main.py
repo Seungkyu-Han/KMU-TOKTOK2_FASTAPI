@@ -40,7 +40,7 @@ async def root(post_req: PostReq):
         )
         count += 1
 
-        if count > 10:
+        if count > 12:
             await delete_thread(client, run.thread_id)
             return "챗봇 요청 중에 에러가 발생했습니다."
 
