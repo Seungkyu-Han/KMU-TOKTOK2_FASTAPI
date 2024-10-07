@@ -3,8 +3,7 @@ from fastapi import FastAPI
 from openai import OpenAI
 from dotenv import load_dotenv
 from pydantic import BaseModel
-import time
-
+import asyncio
 
 app = FastAPI()
 
@@ -23,7 +22,6 @@ async def root(post_req: PostReq):
     client = OpenAI(api_key=OPENAI_API_KEY)
 
     # 스레드 생성
-
     run = client.beta.threads.create_and_run(
         assistant_id=post_req.assistant_id,
         thread={
@@ -46,7 +44,7 @@ async def root(post_req: PostReq):
             await delete_thread(client, run.thread_id)
             return "챗봇 요청 중에 에러가 발생했습니다."
 
-        time.sleep(1)
+        await asyncio.sleep(1)
 
     message = client.beta.threads.messages.list(run.thread_id)
 
